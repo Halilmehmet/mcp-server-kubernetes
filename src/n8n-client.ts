@@ -1,7 +1,5 @@
 
-import fetch from 'node-fetch';
-
-
+// Use the built-in fetch implementation provided by Node.js
 async function main() {
   const serverUrl = 'http://localhost:3001';
 
