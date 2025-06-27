@@ -3,7 +3,7 @@ WORKDIR /usr/local/app
 COPY package.json bun.lockb ./
 
 # Installing kubectl and gcloud with gke-gcloud-auth-plugin for accessing GKE
-RUN apt-get update && apt-get install -y curl
+RUN apt-get update && apt-get install -y curl unzip
 RUN apt-get install -y apt-transport-https ca-certificates curl gnupg
 # Add k8s apt repository
 RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
