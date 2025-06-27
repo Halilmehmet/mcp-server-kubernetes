@@ -16,12 +16,17 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
 RUN apt-get update
 RUN apt-get install -y kubectl google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin awscli
 
+# Install Bun for package management and builds
+RUN curl -fsSL https://bun.sh/install | bash
+ENV BUN_INSTALL=/root/.bun
+ENV PATH="${BUN_INSTALL}/bin:${PATH}"
+
 # Build the typescript code
 FROM base AS build
-RUN npm ci
+RUN bun install
 COPY tsconfig.json .
 COPY src ./src
-RUN npm run build
+RUN bun run build
 
 # Create the final production-ready image
 FROM base AS release
@@ -29,7 +34,7 @@ RUN useradd -m appuser && chown -R appuser /usr/local/app
 ENV NODE_ENV=production
 ENV ENABLE_UNSAFE_SSE_TRANSPORT=1
 ENV PORT=3001
-RUN npm ci --omit=dev
+RUN bun install --production
 COPY --from=build /usr/local/app/dist ./dist
 EXPOSE 3001
 USER appuser
