@@ -11,11 +11,15 @@
 [![Last Commit](https://img.shields.io/github/last-commit/Flux159/mcp-server-kubernetes)](https://github.com/Flux159/mcp-server-kubernetes/commits/main)
 [![smithery badge](https://smithery.ai/badge/mcp-server-kubernetes)](https://smithery.ai/protocol/mcp-server-kubernetes)
 
-MCP Server that can connect to a Kubernetes cluster and manage it. Supports loading kubeconfig from multiple sources in priority order.
+Kubernetes kümeleriyle iletişim kuran ve onları yöneten bir MCP sunucusu. Kubeconfig dosyasını birden fazla kaynaktan öncelik sırasına göre yükleyebilir.
 
 
 <a href="https://glama.ai/mcp/servers/w71ieamqrt"><img width="380" height="200" src="https://glama.ai/mcp/servers/w71ieamqrt/badge" /></a>
 
+## n8n ile Kullanım
+
+Sunucuyu SSE taşımacılığı aktif şekilde başlatıp n8n içindeki HTTP Request düğümleri ile iletişim kurabilirsiniz. Sunucuyu çalıştırın:
+=======
 ## Usage with n8n
 
 You can run the server with the SSE transport enabled and interact with it from
@@ -25,6 +29,8 @@ n8n using HTTP Request nodes. Start the server:
 ENABLE_UNSAFE_SSE_TRANSPORT=1 PORT=3001 npx mcp-server-kubernetes
 ```
 
+Ardından `/sse` uç noktasından oturum kimliğini aldıktan sonra n8n içinden `http://localhost:3001/messages?sessionId=<sessionId>` adresine JSON-RPC istekleri gönderebilirsiniz. Basit bir örnek için `src/n8n-client.ts` dosyasına bakın.
+=======
 Then use an HTTP Request node in n8n to POST JSON-RPC messages to
 `http://localhost:3001/messages?sessionId=<sessionId>` after retrieving the
 session ID from the `/sse` endpoint. See `src/n8n-client.ts` for a minimal
@@ -32,67 +38,75 @@ example script.
 
 By default, the server loads kubeconfig from `~/.kube/config`. For additional authentication options (environment variables, custom paths, etc.), see [ADVANCED_README.md](ADVANCED_README.md).
 
-The server will automatically connect to your current kubectl context. Make sure you have:
+Varsayılan olarak kubeconfig `~/.kube/config` yolundan okunur. Diğer kimlik doğrulama seçenekleri için [ADVANCED_README.md](ADVANCED_README.md) dosyasına bakabilirsiniz.
 
-1. kubectl installed and in your PATH
-2. A valid kubeconfig file with contexts configured
-3. Access to a Kubernetes cluster configured for kubectl (e.g. minikube, Rancher Desktop, GKE, etc.)
-4. Helm v3 installed and in your PATH (no Tiller required). Optional if you don't plan to use Helm.
+Sunucu mevcut kubectl bağlamınızı otomatik olarak kullanır. Şunların kurulu olduğundan emin olun:
 
+1. kubectl PATH değişkeninde olmalı
+2. Geçerli bağlamlara sahip bir kubeconfig dosyası
+3. minikube, Rancher Desktop veya GKE gibi bir Kubernetes kümesine erişim
+4. Helm v3 (isteğe bağlı)
+=======
 You can verify your connection by listing pods or creating a test deployment using the provided tools.
 
-If you have errors open up a standard terminal and run `kubectl get pods` to see if you can connect to your cluster without credentials issues.
+Bağlantınızı, sağlanan araçlarla podları listeleyerek veya örnek bir dağıtım oluşturarak doğrulayabilirsiniz.
 
-## Usage with mcp-chat
+Sorun yaşarsanız standart bir terminalde `kubectl get pods` çalıştırarak erişiminizi kontrol edin.
 
-[mcp-chat](https://github.com/Flux159/mcp-chat) is a CLI chat client for MCP servers. You can use it to interact with the Kubernetes server.
+## mcp-chat ile Kullanım
+
+[Konsol tabanlı mcp-chat](https://github.com/Flux159/mcp-chat) aracı ile bu sunucuya bağlanabilirsiniz.
 
 ```shell
 npx mcp-chat --server "npx mcp-server-kubernetes"
 ```
 
+## Docker ile Çalıştırma
 
-## Features
+Projeyi Docker üzerinde çalıştırmak için `docker-compose.yml` dosyasını kullanabilirsiniz. Kurulum için:
 
-- [x] Connect to a Kubernetes cluster
-- [x] Unified kubectl API for managing resources
-  - Get or list resources with `kubectl_get`
-  - Describe resources with `kubectl_describe`
-  - List resources with `kubectl_get`
-  - Create resources with `kubectl_create`
-  - Apply YAML manifests with `kubectl_apply`
-  - Delete resources with `kubectl_delete`
-  - Get logs with `kubectl_logs`
-  - Manage kubectl contexts with `kubectl_context`
-  - Explain Kubernetes resources with `explain_resource`
-  - List API resources with `list_api_resources`
-  - Scale resources with `kubectl_scale`
-  - Update field(s) of a resource with `kubectl_patch`
-  - Manage deployment rollouts with `kubectl_rollout`
-  - Execute any kubectl command with `kubectl_generic`
-  - Verify connection with `ping`
-- [x] Advanced operations
-  - Scale deployments with `kubectl_scale` (replaces legacy `scale_deployment`)
-  - Port forward to pods and services with `port_forward`
-  - Run Helm operations
-    - Install, upgrade, and uninstall charts
-    - Support for custom values, repositories, and versions
-- [x] Troubleshooting Prompt (`k8s-diagnose`)
-  - Guides through a systematic Kubernetes troubleshooting flow for pods based on a keyword and optional namespace.
-- [x] Non-destructive mode for read and create/update-only access to clusters
+```bash
+docker compose up --build
+```
 
-## Prompts
+Bu işlem Dockerfile üzerinden imajı oluşturur. SSE taşımacılığı varsayılan olarak etkindir ve konteyner 3001 portunu dinler. Kendi `~/.kube/config` dosyanız konteynere salt-okunur olarak bağlanır. Gerekirse `docker-compose.yml` içindeki ortam değişkenleriyle portu değiştirebilirsiniz.
 
-The MCP Kubernetes server includes specialized prompts to assist with common diagnostic operations.
+## Özellikler
 
-### k8s-diagnose Prompt
+- [x] Kubernetes kümesine bağlanma
+- [x] Kaynak yönetimi için birleşik kubectl API'si
+  - `kubectl_get` ile kaynakları listeleme
+  - `kubectl_describe` ile kaynak ayrıntıları
+  - `kubectl_create` ile kaynak oluşturma
+  - `kubectl_apply` ile YAML manifestleri uygulama
+  - `kubectl_delete` ile kaynak silme
+  - `kubectl_logs` ile log görüntüleme
+  - `kubectl_context` ile bağlam yönetimi
+  - `explain_resource` ile kaynak açıklamaları
+  - `list_api_resources` ile API kaynaklarını listeleme
+  - `kubectl_scale` ile ölçeklendirme
+  - `kubectl_patch` ile alan güncelleme
+  - `kubectl_rollout` ile dağıtım yönetimi
+  - `kubectl_generic` ile herhangi bir kubectl komutu
+  - `ping` ile bağlantı doğrulama
+- [x] İleri seviye işlemler
+  - `port_forward` ile port yönlendirme
+  - Helm chart kurulum, güncelleme ve kaldırma
+- [x] `k8s-diagnose` sorun giderme istemi
+- [x] Sadece okuma ve güncelleme yetkisi veren yıkıcı olmayan mod
 
-This prompt provides a systematic troubleshooting flow for Kubernetes pods. It accepts a `keyword` to identify relevant pods and an optional `namespace` to narrow the search.
-The prompt's output will guide you through an autonomous troubleshooting flow, providing instructions for identifying issues, collecting evidence, and suggesting remediation steps.
+## İstemler
 
-## Local Development
+Sunucu, sık karşılaşılan teşhis işlemleri için özel istemler içerir.
 
-Make sure that you have [bun installed](https://bun.sh/docs/installation). Clone the repo & install dependencies:
+### k8s-diagnose İstemi
+=======
+
+Bu istem belirli bir anahtar kelime ve isteğe bağlı ad alanı alarak pod sorunlarını sistematik şekilde inceleyen bir akış sunar.
+
+## Yerel Geliştirme
+
+[bun kurulu](https://bun.sh/docs/installation) olduğundan emin olun. Depoyu klonlayıp bağımlılıkları yükleyin:
 
 ```bash
 git clone https://github.com/Flux159/mcp-server-kubernetes.git
@@ -100,59 +114,63 @@ cd mcp-server-kubernetes
 bun install
 ```
 
-### Development Workflow
+### Geliştirme Adımları
 
-1. Start the server in development mode (watches for file changes):
+1. Dosya değişikliklerini izleyerek sunucuyu başlatın:
 
 ```bash
 bun run dev
 ```
 
-2. Run unit tests:
+2. Birim testlerini çalıştırın:
 
 ```bash
 bun run test
 ```
 
-3. Build the project:
+3. Projeyi derleyin:
 
 ```bash
 bun run build
 ```
 
-4. Local Testing with [Inspector](https://github.com/modelcontextprotocol/inspector)
+4. [Inspector](https://github.com/modelcontextprotocol/inspector) ile yerel test:
 
 ```bash
 npx @modelcontextprotocol/inspector node dist/index.js
-# Follow further instructions on terminal for Inspector link
+# Terminalde verilen bağlantıyı takip edin
 ```
 
-5. Local testing with the n8n client example
+5. n8n istemci örneğiyle test:
+
 
 ```bash
 node ./dist/n8n-client.js
 ```
 
-6. Local testing with [mcp-chat](https://github.com/Flux159/mcp-chat)
+6. [mcp-chat](https://github.com/Flux159/mcp-chat) ile test:
 
 ```bash
 bun run chat
 ```
 
-## Contributing
+## Katkıda Bulunma
 
-See the [CONTRIBUTING.md](CONTRIBUTING.md) file for details.
+Ayrıntılar için [CONTRIBUTING.md](CONTRIBUTING.md) dosyasına bakın.
 
-## Advanced
+## Gelişmiş
 
-### Non-Destructive Mode
+### Yıkıcı Olmayan Mod
 
-You can run the server in a non-destructive mode that disables all destructive operations (delete pods, delete deployments, delete namespaces, etc.):
+Tüm yıkıcı işlemleri devre dışı bırakmak için sunucuyu şu şekilde çalıştırabilirsiniz:
 
 ```shell
 ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS=true npx mcp-server-kubernetes
 ```
 
+
+n8n üzerinde de aynı değişkeni kullanarak sunucuyu çalıştırabilirsiniz:
+=======
 To run n8n in a non-destructive configuration, set the environment variable when starting the server:
 
 ```bash
@@ -161,90 +179,87 @@ ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS=true ENABLE_UNSAFE_SSE_TRANSPORT=1 PORT=3001 np
 
 ### Commands Available in Non-Destructive Mode
 
-All read-only and resource creation/update operations remain available:
 
-- Resource Information: `kubectl_get`, `kubectl_describe`, `kubectl_logs`, `explain_resource`, `list_api_resources`
-- Resource Creation/Modification: `kubectl_apply`, `kubectl_create`, `kubectl_scale`, `kubectl_patch`, `kubectl_rollout`
-- Helm Operations: `install_helm_chart`, `upgrade_helm_chart`
-- Connectivity: `port_forward`, `stop_port_forward`
-- Context Management: `kubectl_context`
+```bash
+ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS=true ENABLE_UNSAFE_SSE_TRANSPORT=1 PORT=3001 npx mcp-server-kubernetes
+```
 
-### Commands Disabled in Non-Destructive Mode
+### Yıkıcı Olmayan Modda Kullanılabilen Komutlar
 
-The following destructive operations are disabled:
+- `kubectl_get`, `kubectl_describe`, `kubectl_logs`, `explain_resource`, `list_api_resources`
+- `kubectl_apply`, `kubectl_create`, `kubectl_scale`, `kubectl_patch`, `kubectl_rollout`
+- `install_helm_chart`, `upgrade_helm_chart`
+- `port_forward`, `stop_port_forward`
+- `kubectl_context`
 
-- `kubectl_delete`: Deleting any Kubernetes resources
-- `uninstall_helm_chart`: Uninstalling Helm charts
-- `cleanup`: Cleanup of managed resources
-- `kubectl_generic`: General kubectl command access (may include destructive operations)
+### Devre Dışı Komutlar
 
-For additional advanced features, see the [ADVANCED_README.md](ADVANCED_README.md).
+- `kubectl_delete`
+- `uninstall_helm_chart`
+- `cleanup`
+- `kubectl_generic`
 
-## Architecture
+Diğer gelişmiş özellikler için [ADVANCED_README.md](ADVANCED_README.md) (İngilizce) dosyasına göz atabilirsiniz.
 
-See this [DeepWiki link](https://deepwiki.com/Flux159/mcp-server-kubernetes) for a more indepth architecture overview created by Devin.
+## Mimarî
 
-This section describes the high-level architecture of the MCP Kubernetes server.
-
-### Request Flow
-
-The sequence diagram below illustrates how requests flow through the system:
+Yüksek seviyede mimarî akış aşağıdaki gibidir:
 
 ```mermaid
 sequenceDiagram
     participant Client
-    participant Transport as Transport Layer
+    participant Transport as Transport Katmanı
     participant Server as MCP Server
-    participant Filter as Tool Filter
-    participant Handler as Request Handler
+    participant Filter as Araç Filtresi
+    participant Handler as İstek Yöneticisi
     participant K8sManager as KubernetesManager
     participant K8s as Kubernetes API
 
-    Note over Transport: StdioTransport or<br>SSE Transport
+    Note over Transport: StdioTransport veya\nSSE Transport
 
-    Client->>Transport: Send Request
-    Transport->>Server: Forward Request
+    Client->>Transport: İstek gönder
+    Transport->>Server: İsteği ilet
 
-    alt Tools Request
-        Server->>Filter: Filter available tools
-        Note over Filter: Remove destructive tools<br>if in non-destructive mode
-        Filter->>Handler: Route to tools handler
+    alt Araç İsteği
+        Server->>Filter: Kullanılabilir araçları filtrele
+        Note over Filter: Yıkıcı olmayan modda\nyıkıcı araçlar kaldırılır
+        Filter->>Handler: İsteği yönlendir
 
-        alt kubectl operations
-            Handler->>K8sManager: Execute kubectl operation
-            K8sManager->>K8s: Make API call
-        else Helm operations
-            Handler->>K8sManager: Execute Helm operation
-            K8sManager->>K8s: Make API call
-        else Port Forward operations
-            Handler->>K8sManager: Set up port forwarding
-            K8sManager->>K8s: Make API call
+        alt kubectl işlemleri
+            Handler->>K8sManager: kubectl çalıştır
+            K8sManager->>K8s: API çağrısı
+        else Helm işlemleri
+            Handler->>K8sManager: Helm işlemi
+            K8sManager->>K8s: API çağrısı
+        else Port yönlendirme
+            Handler->>K8sManager: Port forward kur
+            K8sManager->>K8s: API çağrısı
         end
 
-        K8s-->>K8sManager: Return result
-        K8sManager-->>Handler: Process response
-        Handler-->>Server: Return tool result
-    else Resource Request
-        Server->>Handler: Route to resource handler
-        Handler->>K8sManager: Get resource data
-        K8sManager->>K8s: Query API
-        K8s-->>K8sManager: Return data
-        K8sManager-->>Handler: Format response
-        Handler-->>Server: Return resource data
+        K8s-->>K8sManager: Sonuç dön
+        K8sManager-->>Handler: Yanıtı işle
+        Handler-->>Server: Aracın sonucu
+    else Kaynak İsteği
+        Server->>Handler: Kaynak yöneticisine yönlendir
+        Handler->>K8sManager: Kaynak verisi al
+        K8sManager->>K8s: API sorgusu
+        K8s-->>K8sManager: Veri dön
+        K8sManager-->>Handler: Yanıtı hazırla
+        Handler-->>Server: Kaynak verisi
     end
 
-    Server-->>Transport: Send Response
-    Transport-->>Client: Return Final Response
+    Server-->>Transport: Yanıt gönder
+    Transport-->>Client: Son yanıt
 ```
 
-See this [DeepWiki link](https://deepwiki.com/Flux159/mcp-server-kubernetes) for a more indepth architecture overview created by Devin.
+Daha ayrıntılı mimarî için [DeepWiki](https://deepwiki.com/Flux159/mcp-server-kubernetes) sayfasına bakabilirsiniz.
 
-## Publishing new release
+## Yeni Sürüm Yayınlama
 
-Go to the [releases page](https://github.com/Flux159/mcp-server-kubernetes/releases), click on "Draft New Release", click "Choose a tag" and create a new tag by typing out a new version number using "v{major}.{minor}.{patch}" semver format. Then, write a release title "Release v{major}.{minor}.{patch}" and description / changelog if necessary and click "Publish Release".
+[Releases](https://github.com/Flux159/mcp-server-kubernetes/releases) sayfasına gidip "Draft New Release" seçeneği ile `v{major}.{minor}.{patch}` formatında yeni bir etiket oluşturun. Başlık olarak "Release v{major}.{minor}.{patch}" yazıp gerekli değişiklikleri ekleyin ve "Publish Release" butonuna tıklayın.
 
-This will create a new tag which will trigger a new release build via the cd.yml workflow. Once successful, the new release will be published to [npm](https://www.npmjs.com/package/mcp-server-kubernetes). Note that there is no need to update the package.json version manually, as the workflow will automatically update the version number in the package.json file & push a commit to main.
+Bu işlem cd.yml iş akışını tetikler ve yeni sürüm npm üzerinde yayınlanır. `package.json` sürümü otomatik güncellendiği için elle değiştirmeye gerek yoktur.
 
-## Not planned
+## Planlanmayanlar
 
-Adding clusters to kubectx.
+kubectx'e yeni kümeler eklemek.

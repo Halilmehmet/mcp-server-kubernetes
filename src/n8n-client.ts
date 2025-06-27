@@ -1,4 +1,6 @@
+
 import fetch from 'node-fetch';
+
 
 async function main() {
   const serverUrl = 'http://localhost:3001';
