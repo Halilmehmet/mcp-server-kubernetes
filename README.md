@@ -1,7 +1,7 @@
 # MCP Server Kubernetes
 
-[![CI](https://github.com/Flux159/mcp-server-kubernetes/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/mcp-server-kubernetes/actions/workflows/ci.yml)
-[![Language](https://img.shields.io/github/languages/top/Flux159/mcp-server-kubernetes)](https://github.com/yourusername/mcp-server-kubernetes)
+[![CI](https://github.com/Flux159/mcp-server-kubernetes/actions/workflows/ci.yml/badge.svg)](https://github.com/Flux159/mcp-server-kubernetes/actions/workflows/ci.yml)
+[![Language](https://img.shields.io/github/languages/top/Flux159/mcp-server-kubernetes)](https://github.com/Flux159/mcp-server-kubernetes)
 [![Bun](https://img.shields.io/badge/runtime-bun-orange)](https://bun.sh)
 [![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?style=flat&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -13,19 +13,30 @@
 
 Kubernetes kümeleriyle iletişim kuran ve onları yöneten bir MCP sunucusu. Kubeconfig dosyasını birden fazla kaynaktan öncelik sırasına göre yükleyebilir.
 
-https://github.com/user-attachments/assets/f25f8f4e-4d04-479b-9ae0-5dac452dd2ed
 
 <a href="https://glama.ai/mcp/servers/w71ieamqrt"><img width="380" height="200" src="https://glama.ai/mcp/servers/w71ieamqrt/badge" /></a>
 
 ## n8n ile Kullanım
 
 Sunucuyu SSE taşımacılığı aktif şekilde başlatıp n8n içindeki HTTP Request düğümleri ile iletişim kurabilirsiniz. Sunucuyu çalıştırın:
+=======
+## Usage with n8n
+
+You can run the server with the SSE transport enabled and interact with it from
+n8n using HTTP Request nodes. Start the server:
 
 ```bash
 ENABLE_UNSAFE_SSE_TRANSPORT=1 PORT=3001 npx mcp-server-kubernetes
 ```
 
 Ardından `/sse` uç noktasından oturum kimliğini aldıktan sonra n8n içinden `http://localhost:3001/messages?sessionId=<sessionId>` adresine JSON-RPC istekleri gönderebilirsiniz. Basit bir örnek için `src/n8n-client.ts` dosyasına bakın.
+=======
+Then use an HTTP Request node in n8n to POST JSON-RPC messages to
+`http://localhost:3001/messages?sessionId=<sessionId>` after retrieving the
+session ID from the `/sse` endpoint. See `src/n8n-client.ts` for a minimal
+example script.
+
+By default, the server loads kubeconfig from `~/.kube/config`. For additional authentication options (environment variables, custom paths, etc.), see [ADVANCED_README.md](ADVANCED_README.md).
 
 Varsayılan olarak kubeconfig `~/.kube/config` yolundan okunur. Diğer kimlik doğrulama seçenekleri için [ADVANCED_README.md](ADVANCED_README.md) dosyasına bakabilirsiniz.
 
@@ -35,6 +46,8 @@ Sunucu mevcut kubectl bağlamınızı otomatik olarak kullanır. Şunların kuru
 2. Geçerli bağlamlara sahip bir kubeconfig dosyası
 3. minikube, Rancher Desktop veya GKE gibi bir Kubernetes kümesine erişim
 4. Helm v3 (isteğe bağlı)
+=======
+You can verify your connection by listing pods or creating a test deployment using the provided tools.
 
 Bağlantınızı, sağlanan araçlarla podları listeleyerek veya örnek bir dağıtım oluşturarak doğrulayabilirsiniz.
 
@@ -87,6 +100,7 @@ Bu işlem Dockerfile üzerinden imajı oluşturur. SSE taşımacılığı varsay
 Sunucu, sık karşılaşılan teşhis işlemleri için özel istemler içerir.
 
 ### k8s-diagnose İstemi
+=======
 
 Bu istem belirli bir anahtar kelime ve isteğe bağlı ad alanı alarak pod sorunlarını sistematik şekilde inceleyen bir akış sunar.
 
@@ -129,6 +143,7 @@ npx @modelcontextprotocol/inspector node dist/index.js
 
 5. n8n istemci örneğiyle test:
 
+
 ```bash
 node ./dist/n8n-client.js
 ```
@@ -153,7 +168,17 @@ Tüm yıkıcı işlemleri devre dışı bırakmak için sunucuyu şu şekilde ç
 ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS=true npx mcp-server-kubernetes
 ```
 
+
 n8n üzerinde de aynı değişkeni kullanarak sunucuyu çalıştırabilirsiniz:
+=======
+To run n8n in a non-destructive configuration, set the environment variable when starting the server:
+
+```bash
+ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS=true ENABLE_UNSAFE_SSE_TRANSPORT=1 PORT=3001 npx mcp-server-kubernetes
+```
+
+### Commands Available in Non-Destructive Mode
+
 
 ```bash
 ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS=true ENABLE_UNSAFE_SSE_TRANSPORT=1 PORT=3001 npx mcp-server-kubernetes
