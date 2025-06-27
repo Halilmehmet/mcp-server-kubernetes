@@ -17,18 +17,19 @@ https://github.com/user-attachments/assets/f25f8f4e-4d04-479b-9ae0-5dac452dd2ed
 
 <a href="https://glama.ai/mcp/servers/w71ieamqrt"><img width="380" height="200" src="https://glama.ai/mcp/servers/w71ieamqrt/badge" /></a>
 
-## Usage with Claude Desktop
+## Usage with n8n
 
-```json
-{
-  "mcpServers": {
-    "kubernetes": {
-      "command": "npx",
-      "args": ["mcp-server-kubernetes"]
-    }
-  }
-}
+You can run the server with the SSE transport enabled and interact with it from
+n8n using HTTP Request nodes. Start the server:
+
+```bash
+ENABLE_UNSAFE_SSE_TRANSPORT=1 PORT=3001 npx mcp-server-kubernetes
 ```
+
+Then use an HTTP Request node in n8n to POST JSON-RPC messages to
+`http://localhost:3001/messages?sessionId=<sessionId>` after retrieving the
+session ID from the `/sse` endpoint. See `src/n8n-client.ts` for a minimal
+example script.
 
 By default, the server loads kubeconfig from `~/.kube/config`. For additional authentication options (environment variables, custom paths, etc.), see [ADVANCED_README.md](ADVANCED_README.md).
 
@@ -39,7 +40,7 @@ The server will automatically connect to your current kubectl context. Make sure
 3. Access to a Kubernetes cluster configured for kubectl (e.g. minikube, Rancher Desktop, GKE, etc.)
 4. Helm v3 installed and in your PATH (no Tiller required). Optional if you don't plan to use Helm.
 
-You can verify your connection by asking Claude to list your pods or create a test deployment.
+You can verify your connection by listing pods or creating a test deployment using the provided tools.
 
 If you have errors open up a standard terminal and run `kubectl get pods` to see if you can connect to your cluster without credentials issues.
 
@@ -51,19 +52,6 @@ If you have errors open up a standard terminal and run `kubectl get pods` to see
 npx mcp-chat --server "npx mcp-server-kubernetes"
 ```
 
-Alternatively, pass it your existing Claude Desktop configuration file from above (Linux should pass the correct path to config):
-
-Mac:
-
-```shell
-npx mcp-chat --config "~/Library/Application Support/Claude/claude_desktop_config.json"
-```
-
-Windows:
-
-```shell
-npx mcp-chat --config "%APPDATA%\Claude\claude_desktop_config.json"
-```
 
 ## Features
 
@@ -140,17 +128,10 @@ npx @modelcontextprotocol/inspector node dist/index.js
 # Follow further instructions on terminal for Inspector link
 ```
 
-5. Local testing with Claude Desktop
+5. Local testing with the n8n client example
 
-```json
-{
-  "mcpServers": {
-    "mcp-server-kubernetes": {
-      "command": "node",
-      "args": ["/path/to/your/mcp-server-kubernetes/dist/index.js"]
-    }
-  }
-}
+```bash
+node ./dist/n8n-client.js
 ```
 
 6. Local testing with [mcp-chat](https://github.com/Flux159/mcp-chat)
@@ -173,20 +154,10 @@ You can run the server in a non-destructive mode that disables all destructive o
 ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS=true npx mcp-server-kubernetes
 ```
 
-For Claude Desktop configuration with non-destructive mode:
+To run n8n in a non-destructive configuration, set the environment variable when starting the server:
 
-```json
-{
-  "mcpServers": {
-    "kubernetes-readonly": {
-      "command": "npx",
-      "args": ["mcp-server-kubernetes"],
-      "env": {
-        "ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS": "true"
-      }
-    }
-  }
-}
+```bash
+ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS=true ENABLE_UNSAFE_SSE_TRANSPORT=1 PORT=3001 npx mcp-server-kubernetes
 ```
 
 ### Commands Available in Non-Destructive Mode
