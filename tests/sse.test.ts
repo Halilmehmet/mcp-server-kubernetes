@@ -29,7 +29,7 @@ async function findAvailablePort(startPort: number): Promise<number> {
 }
 
 // Modified version of startSSEServer that returns the Express app
-function startSSEServerWithReturn(server: Server): Promise<any> {
+function startSSEServerWithReturn(server: Server): Promise<{ serverInstance: any; transports: Array<SSEServerTransport> }> {
   return new Promise((resolve, reject) => {
     const app = express();
     let transports: Array<SSEServerTransport> = [];
@@ -37,6 +37,10 @@ function startSSEServerWithReturn(server: Server): Promise<any> {
     app.get("/sse", async (req, res) => {
       const transport = new SSEServerTransport("/messages", res);
       transports.push(transport);
+      // Mirror server cleanup logic so tests can verify transports are removed
+      res.on('close', () => {
+        transports = transports.filter(t => t !== transport);
+      });
       await server.connect(transport);
     });
 
@@ -59,7 +63,7 @@ function startSSEServerWithReturn(server: Server): Promise<any> {
       console.log(
         `mcp-kubernetes-server is listening on port ${port}\nUse the following url to connect to the server:\nhttp://localhost:${port}/sse`
       );
-      resolve(serverInstance);
+      resolve({ serverInstance, transports });
     });
     
     serverInstance.on('error', reject);
@@ -71,6 +75,7 @@ describe("SSE transport", () => {
   let serverUrl: string;
   let actualPort: number;
   let expressApp: any;
+  let transports: Array<SSEServerTransport>;
 
   beforeAll(async () => {
     const k8sManager = new KubernetesManager();
@@ -119,8 +124,10 @@ describe("SSE transport", () => {
     actualPort = await findAvailablePort(3001);
     process.env.PORT = actualPort.toString();
     
-    // Start the SSE server and get the Express app reference
-    expressApp = await startSSEServerWithReturn(server);
+    // Start the SSE server and get the Express app reference along with transports
+    const result = await startSSEServerWithReturn(server);
+    expressApp = result.serverInstance;
+    transports = result.transports;
     serverUrl = `http://localhost:${actualPort}`;
     
     // Wait a bit for server to fully start
@@ -234,5 +241,11 @@ describe("SSE transport", () => {
         expect(responseText).toContain("NAMESPACE");
       }
     }
+
+    // Close the SSE stream and ensure the server cleaned up transports
+    await reader?.cancel();
+    // Give the server a moment to process the close event
+    await new Promise(res => setTimeout(res, 100));
+    expect(transports.length).toBe(0);
   });
 });
