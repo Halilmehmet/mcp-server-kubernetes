@@ -94,25 +94,16 @@ export K8S_CONTEXT='production'
 export K8S_NAMESPACE='my-app'
 ```
 
-### Claude Desktop Configuration with Environment Variables
+### n8n Configuration with Environment Variables
 
-For Claude Desktop with environment variables:
+The server can be started with environment variables set in an n8n Execute Command node:
 
-```json
-{
-  "mcpServers": {
-    "kubernetes-prod": {
-      "command": "npx",
-      "args": ["mcp-server-kubernetes"],
-      "env": {
-        "K8S_SERVER": "https://prod-cluster.example.com",
-        "K8S_TOKEN": "your-token-here",
-        "K8S_CONTEXT": "production",
-        "K8S_NAMESPACE": "my-app"
-      }
-    }
-  }
-}
+```bash
+K8S_SERVER=https://prod-cluster.example.com \
+K8S_TOKEN=your-token-here \
+K8S_CONTEXT=production \
+K8S_NAMESPACE=my-app \
+ENABLE_UNSAFE_SSE_TRANSPORT=1 PORT=3001 npx mcp-server-kubernetes
 ```
 
 ### Non-Destructive Mode
@@ -141,20 +132,10 @@ When enabled, the following destructive operations are disabled:
 
 All read-only operations like listing resources, describing pods, getting logs, etc. remain fully functional.
 
-For Non destructive mode in Claude Desktop, you can specify the env var like this:
+To enable non-destructive mode when running from n8n, set the environment variable:
 
-```json
-{
-  "mcpServers": {
-    "kubernetes-readonly": {
-      "command": "npx",
-      "args": ["mcp-server-kubernetes"],
-      "env": {
-        "ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS": "true"
-      }
-    }
-  }
-}
+```bash
+ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS=true ENABLE_UNSAFE_SSE_TRANSPORT=1 PORT=3001 npx mcp-server-kubernetes
 ```
 
 ### SSE Transport

@@ -1,6 +1,6 @@
-FROM node:24.2.0-slim AS base
+FROM node:20-slim AS base
 WORKDIR /usr/local/app
-COPY package.json .
+COPY package.json bun.lockb ./
 
 # Installing kubectl and gcloud with gke-gcloud-auth-plugin for accessing GKE
 RUN apt-get update && apt-get install -y curl
@@ -17,8 +17,8 @@ RUN apt-get update
 RUN apt-get install -y kubectl google-cloud-cli google-cloud-cli-gke-gcloud-auth-plugin awscli
 
 # Build the typescript code
-FROM base AS dependencies
-RUN npm install
+FROM base AS build
+RUN npm ci
 COPY tsconfig.json .
 COPY src ./src
 RUN npm run build
@@ -27,7 +27,10 @@ RUN npm run build
 FROM base AS release
 RUN useradd -m appuser && chown -R appuser /usr/local/app
 ENV NODE_ENV=production
-RUN npm install --only=production
-COPY --from=dependencies /usr/local/app/dist ./dist
+ENV ENABLE_UNSAFE_SSE_TRANSPORT=1
+ENV PORT=3001
+RUN npm ci --omit=dev
+COPY --from=build /usr/local/app/dist ./dist
+EXPOSE 3001
 USER appuser
 CMD ["node", "dist/index.js"]

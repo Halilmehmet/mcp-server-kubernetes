@@ -54,7 +54,7 @@ function startSSEServerWithReturn(server: Server): Promise<any> {
       }
     });
 
-    const port = parseInt(process.env.PORT || "3000");
+    const port = parseInt(process.env.PORT || "3001");
     const serverInstance = app.listen(port, () => {
       console.log(
         `mcp-kubernetes-server is listening on port ${port}\nUse the following url to connect to the server:\nhttp://localhost:${port}/sse`

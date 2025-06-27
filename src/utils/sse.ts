@@ -29,12 +29,12 @@ export function startSSEServer(server: Server) {
     }
   });
 
-  let port = 3000;
+  let port = 3001;
   try {
-    port = parseInt(process.env.PORT || "3000", 10);
+    port = parseInt(process.env.PORT || "3001", 10);
   } catch (e) {
     console.error(
-      "Invalid PORT environment variable, using default port 3000."
+      "Invalid PORT environment variable, using default port 3001."
     );
   }
 
