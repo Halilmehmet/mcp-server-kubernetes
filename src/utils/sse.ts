@@ -12,6 +12,11 @@ export function startSSEServer(server: Server) {
   app.get("/sse", async (req, res) => {
     const transport = new SSEServerTransport("/messages", res);
     transports.push(transport);
+    // When the client disconnects, remove the transport so we don't leak
+    // references and keep sending events to closed connections.
+    res.on("close", () => {
+      transports = transports.filter((t) => t !== transport);
+    });
     await server.connect(transport);
   });
 
