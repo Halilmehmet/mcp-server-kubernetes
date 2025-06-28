@@ -29,11 +29,12 @@ n8n using HTTP Request nodes. Start the server:
 ENABLE_UNSAFE_SSE_TRANSPORT=1 PORT=3001 npx mcp-server-kubernetes
 ```
 
-Ardından `/sse` uç noktasından oturum kimliğini aldıktan sonra n8n içinden `http://localhost:3001/messages?sessionId=<sessionId>` adresine JSON-RPC istekleri gönderebilirsiniz. Basit bir örnek için `src/n8n-client.ts` dosyasına bakın.
+Ardından `/sse` uç noktasından oturum kimliğini aldıktan sonra n8n içinden `http://localhost:3001/messages?sessionId=<sessionId>` adresine JSON-RPC istekleri gönderebilirsiniz. Basit bir örnek için `src/n8n-client.ts` dosyasına bakın. İsterseniz `workflows/mcp-kubernetes-example.n8n.json` dosyasını n8n'e içe aktararak hazır bir akışla da deneyebilirsiniz.
 Then use an HTTP Request node in n8n to POST JSON-RPC messages to
 `http://localhost:3001/messages?sessionId=<sessionId>` after retrieving the
 session ID from the `/sse` endpoint. See `src/n8n-client.ts` for a minimal
-example script.
+example script. You can also import `workflows/mcp-kubernetes-example.n8n.json`
+into n8n for a ready-to-run workflow.
 
 By default, the server loads kubeconfig from `~/.kube/config`. For additional authentication options (environment variables, custom paths, etc.), see [ADVANCED_README.md](ADVANCED_README.md).
 

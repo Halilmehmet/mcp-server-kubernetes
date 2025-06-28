@@ -1,0 +1,69 @@
+{
+  "name": "MCP Kubernetes Example",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "sessionId",
+              "value": "REPLACE_WITH_SESSION_ID"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set Session ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "requestMethod": "POST",
+        "url": "http://localhost:3001/messages?sessionId={{$json[\"sessionId\"]}}",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"kubectl_get\",\n    \"arguments\": {\n      \"resourceType\": \"pods\",\n      \"namespace\": \"default\",\n      \"output\": \"json\"\n    }\n  }\n}"
+      },
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [660, 300]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Set Session ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Session ID": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "version": 1
+}
